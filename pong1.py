@@ -1,4 +1,6 @@
 import turtle
+import time
+from paddle import create_paddle, PaddleMove
 
 wn = turtle.Screen()
 
@@ -6,18 +8,6 @@ wn.title("Pong by Chilly_17")
 wn.bgcolor("black")
 wn.setup(width=800, height=600)
 wn.tracer(0)
-
-
-# General paddle settings
-def create_paddle(x_position):
-    paddle = turtle.Turtle()
-    paddle.speed(0)
-    paddle.shape("square")
-    paddle.color("white")
-    paddle.shapesize(stretch_wid=5, stretch_len=1)
-    paddle.penup()
-    paddle.goto(x_position, 0)
-    return paddle
 
 
 # Paddle A
@@ -33,24 +23,8 @@ ball.shape("square")
 ball.color("white")
 ball.penup()
 ball.goto(0, 0)
-
-
-class PaddleMove:
-    def __init__(self, paddle):
-        self.paddle = paddle
-
-    def up(self):
-        paddle = self.paddle
-        y = paddle.ycor()
-        y += 20
-        paddle.sety(y)
-
-    def down(self):
-        paddle = self.paddle
-        y = paddle.ycor()
-        y -= 20
-        paddle.sety(y)
-
+ball.dx = 1
+ball.dy = 1
 
 paddle_a_func = PaddleMove(paddle_a)
 paddle_b_func = PaddleMove(paddle_b)
@@ -60,10 +34,51 @@ paddle_b_func = PaddleMove(paddle_b)
 wn.listen()
 wn.onkeypress(paddle_a_func.up, "w")
 wn.onkeypress(paddle_a_func.down, "s")
-wn.onkeypress(paddle_b_func.up, "up")
-wn.onkeypress(paddle_b_func.down, "down")
+wn.onkeypress(paddle_b_func.up, "Up")
+wn.onkeypress(paddle_b_func.down, "Down")
 
 
-# Main loop
 while True:
+    time.sleep(1 / 60)
     wn.update()
+
+    ball.setx(ball.xcor() + ball.dx)
+    ball.sety(ball.ycor() + ball.dy)
+
+    # Border checking
+    if ball.ycor() >= 290:
+        ball.dy *= -1
+
+    if ball.ycor() <= -290:
+        ball.dy *= -1
+
+    if ball.xcor() >= 400:
+        ball.goto(0, 0)
+        ball.dx *= -1
+        ball.dy *= -1
+
+    if ball.xcor() <= -400:
+        ball.goto(0, 0)
+        ball.dx *= -1
+        ball.dy *= -1
+
+    # Paddle and ball collisions
+    if (
+        (ball.xcor() > 340 and ball.xcor() < 350)
+        and (
+            ball.ycor() < paddle_b.ycor() + 60
+            and ball.ycor() > paddle_b.ycor() - 60
+        )
+    ):
+        ball.setx(340)
+        ball.dx *= -1
+
+    if (
+        (ball.xcor() < -340 and ball.xcor() > -350)
+        and (
+            ball.ycor() < paddle_a.ycor() + 60
+            and ball.ycor() > paddle_a.ycor() - 60
+        )
+    ):
+        ball.setx(-340)
+        ball.dx *= -1
