@@ -1,6 +1,8 @@
 import turtle
 import time
-from paddle import create_paddle, PaddleMove
+import random
+from paddle import Paddle
+from pen import Pen
 
 wn = turtle.Screen()
 
@@ -11,10 +13,10 @@ wn.tracer(0)
 
 
 # Paddle A
-paddle_a = create_paddle(-350)
+paddle_a = Paddle(x_position=-350)
 
 # Paddle B
-paddle_b = create_paddle(350)
+paddle_b = Paddle(x_position=350)
 
 # Ball
 ball = turtle.Turtle()
@@ -23,20 +25,22 @@ ball.shape("square")
 ball.color("white")
 ball.penup()
 ball.goto(0, 0)
-ball.dx = 1
-ball.dy = 1
+ball.dx = 1.5
+ball.dy = 1.5
 
-paddle_a_func = PaddleMove(paddle_a)
-paddle_b_func = PaddleMove(paddle_b)
+y_range = [i * 10 for i in range(1, 21)] + [-i * 10 for i in range(1, 21)]
 
+# Pen
+score_a, score_b = 0, 0
+pen = Pen()
+pen.write(score_a, score_b)
 
 # Keyboard binding
 wn.listen()
-wn.onkeypress(paddle_a_func.up, "w")
-wn.onkeypress(paddle_a_func.down, "s")
-wn.onkeypress(paddle_b_func.up, "Up")
-wn.onkeypress(paddle_b_func.down, "Down")
-
+wn.onkeypress(paddle_a.up, "w")
+wn.onkeypress(paddle_a.down, "s")
+wn.onkeypress(paddle_b.up, "Up")
+wn.onkeypress(paddle_b.down, "Down")
 
 while True:
     time.sleep(1 / 60)
@@ -53,15 +57,18 @@ while True:
         ball.dy *= -1
 
     if ball.xcor() >= 400:
-        ball.goto(0, 0)
-        ball.dx *= -1
-        ball.dy *= -1
+        ball.goto(0, random.choice(y_range))
+        ball.dx = -1.5
+        ball.dy = 1.5
+        score_a += 1
+        pen.write(score_a, score_b)
 
     if ball.xcor() <= -400:
-        ball.goto(0, 0)
-        ball.dx *= -1
-        ball.dy *= -1
-
+        ball.goto(0, random.choice(y_range))
+        ball.dx = 1.5
+        ball.dy = 1.5
+        score_b += 1
+        pen.write(score_a, score_b)
     # Paddle and ball collisions
     if (
         (ball.xcor() > 340 and ball.xcor() < 350)
@@ -71,7 +78,7 @@ while True:
         )
     ):
         ball.setx(340)
-        ball.dx *= -1
+        ball.dx *= -1.1
 
     if (
         (ball.xcor() < -340 and ball.xcor() > -350)
@@ -81,4 +88,4 @@ while True:
         )
     ):
         ball.setx(-340)
-        ball.dx *= -1
+        ball.dx *= -1.1
