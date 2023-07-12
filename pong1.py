@@ -3,6 +3,7 @@ import time
 import random
 from paddle import Paddle
 from pen import Pen
+import winsound
 
 wn = turtle.Screen()
 
@@ -10,6 +11,10 @@ wn.title("Pong by Chilly_17")
 wn.bgcolor("black")
 wn.setup(width=800, height=600)
 wn.tracer(0)
+
+
+def update():
+    wn.update()
 
 
 # Paddle A
@@ -25,8 +30,8 @@ ball.shape("square")
 ball.color("white")
 ball.penup()
 ball.goto(0, 0)
-ball.dx = 1.5
-ball.dy = 1.5
+ball.dx = 2
+ball.dy = 2
 
 y_range = [i * 10 for i in range(1, 21)] + [-i * 10 for i in range(1, 21)]
 
@@ -50,26 +55,31 @@ while True:
     ball.sety(ball.ycor() + ball.dy)
 
     # Border checking
+
     if ball.ycor() >= 290:
+        winsound.PlaySound("bounce.wav", winsound.SND_ASYNC)
         ball.dy *= -1
 
     if ball.ycor() <= -290:
+        winsound.PlaySound("bounce.wav", winsound.SND_ASYNC)
         ball.dy *= -1
 
     if ball.xcor() >= 400:
         ball.goto(0, random.choice(y_range))
-        ball.dx = -1.5
-        ball.dy = 1.5
+        ball.dx = -2
+        ball.dy = 2
         score_a += 1
         pen.write(score_a, score_b)
 
     if ball.xcor() <= -400:
         ball.goto(0, random.choice(y_range))
-        ball.dx = 1.5
-        ball.dy = 1.5
+        ball.dx = 2
+        ball.dy = 2
         score_b += 1
         pen.write(score_a, score_b)
+
     # Paddle and ball collisions
+
     if (
         (ball.xcor() > 340 and ball.xcor() < 350)
         and (
@@ -77,6 +87,7 @@ while True:
             and ball.ycor() > paddle_b.ycor() - 60
         )
     ):
+        winsound.PlaySound("bounce.wav", winsound.SND_ASYNC)
         ball.setx(340)
         ball.dx *= -1.1
 
@@ -87,5 +98,6 @@ while True:
             and ball.ycor() > paddle_a.ycor() - 60
         )
     ):
+        winsound.PlaySound("bounce.wav", winsound.SND_ASYNC)
         ball.setx(-340)
         ball.dx *= -1.1
