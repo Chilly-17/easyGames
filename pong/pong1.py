@@ -4,6 +4,7 @@ import random
 from paddle import Paddle
 from pen import Pen
 import winsound
+import os
 
 wn = turtle.Screen()
 
@@ -57,11 +58,13 @@ while True:
     # Border checking
 
     if ball.ycor() >= 290:
-        winsound.PlaySound("bounce.wav", winsound.SND_ASYNC)
+        winsound.PlaySound(os.path.join(
+            "pong", "bounce.wav"), winsound.SND_ASYNC)
         ball.dy *= -1
 
     if ball.ycor() <= -290:
-        winsound.PlaySound("bounce.wav", winsound.SND_ASYNC)
+        winsound.PlaySound(os.path.join(
+            "pong", "bounce.wav"), winsound.SND_ASYNC)
         ball.dy *= -1
 
     if ball.xcor() >= 400:
@@ -87,7 +90,8 @@ while True:
             and ball.ycor() > paddle_b.ycor() - 60
         )
     ):
-        winsound.PlaySound("bounce.wav", winsound.SND_ASYNC)
+        winsound.PlaySound(os.path.join(
+            "pong", "bounce.wav"), winsound.SND_ASYNC)
         ball.setx(340)
         ball.dx *= -1.1
 
@@ -98,6 +102,7 @@ while True:
             and ball.ycor() > paddle_a.ycor() - 60
         )
     ):
-        winsound.PlaySound("bounce.wav", winsound.SND_ASYNC)
+        winsound.PlaySound(os.path.join(
+            "pong", "bounce.wav"), winsound.SND_ASYNC)
         ball.setx(-340)
         ball.dx *= -1.1
