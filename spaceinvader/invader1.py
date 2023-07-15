@@ -1,5 +1,6 @@
 import pygame
 import os
+import time
 pygame.font.init()
 pygame.mixer.init()
 
@@ -18,8 +19,10 @@ SPACE = pygame.transform.scale(
     (WIDTH, HEIGHT))
 
 # Sounds (.mp3)
-BULLET_HIT_SOUND = pygame.mixer.Sound(os.path.join("spaceinvader", "assets", "hitSound.mp3"))
-BULLET_FIRE_SOUND = pygame.mixer.Sound(os.path.join("spaceinvader", "assets", "fireSound.mp3"))
+BULLET_HIT_SOUND = pygame.mixer.Sound(
+    os.path.join("spaceinvader", "assets", "hitSound.mp3"))
+BULLET_FIRE_SOUND = pygame.mixer.Sound(
+    os.path.join("spaceinvader", "assets", "fireSound.mp3"))
 
 # Hard coded fps and player speed
 FPS = 60
@@ -42,6 +45,7 @@ RED_HIT = pygame.USEREVENT + 2
 
 # Spaceship images
 SPACESHIP_WIDTH, SPACESHIP_HEIGHT = 55, 40
+UFO_WIDTH, UFO_HEIGHT = 100, 90
 
 YELLOW_SPACESHIP_IMAGE = pygame.image.load(
     os.path.join("spaceinvader", "assets", "spaceship_yellow.png"))
@@ -53,10 +57,18 @@ RED_SPACESHIP_IMAGE = pygame.image.load(
 RED_SPACESHIP = pygame.transform.rotate(pygame.transform.scale(
     RED_SPACESHIP_IMAGE, (SPACESHIP_WIDTH, SPACESHIP_HEIGHT)), 270)
 
+# UFO
+UFO_IMAGE = pygame.image.load(
+    os.path.join("spaceinvader", "assets", "UFO.png"))
+UFO = pygame.transform.scale(
+    UFO_IMAGE, (UFO_WIDTH, UFO_HEIGHT))
+UFO_VEL = 1
+
 
 def draw_window(
     yellow: pygame.Rect,
     red: pygame.Rect,
+    ufo_rect: pygame.Rect,
     yellow_bullets: list,
     red_bullets: list,
     yellow_heath: int,
@@ -75,6 +87,9 @@ def draw_window(
     # Spaceships
     WIN.blit(YELLOW_SPACESHIP, (yellow.x, yellow.y))
     WIN.blit(RED_SPACESHIP, (red.x, red.y))
+
+    #UFO
+    WIN.blit(UFO, (ufo_rect.x, ufo_rect.y))
 
     bullet: pygame.Rect
     for bullet in yellow_bullets:
@@ -166,13 +181,20 @@ def draw_winner(text):
 
 
 def main():
+    start_time = time.time()
+
     yellow = pygame.Rect(100, 300, SPACESHIP_WIDTH, SPACESHIP_HEIGHT)
     red = pygame.Rect(700, 300, SPACESHIP_WIDTH, SPACESHIP_HEIGHT)
+
+    ufo_rect = pygame.Rect(WIDTH // 2 - UFO_WIDTH //2, -100, UFO_WIDTH, UFO_HEIGHT)
 
     yellow_bullets, red_bullets = [], []
     yellow_health, red_health = 10, 10
 
     winner_text = ""
+
+    ufo_spawned = False
+    ufo_direction = 1  # aka down
 
     clock = pygame.time.Clock()
 
@@ -229,6 +251,18 @@ def main():
             draw_winner(winner_text)
             break
 
+        time_now = time.time()
+        passed_time = time_now - start_time
+
+        if passed_time > 10.0 and not ufo_spawned:
+            ufo_spawned = True
+
+        if ufo_spawned:
+            ufo_rect.y += UFO_VEL * ufo_direction
+        
+        if ufo_rect.y > 200:
+            ufo_direction = -1
+
         keys_pressed = pygame.key.get_pressed()
         handle_yellow_movement(yellow, keys_pressed)
         handle_red_movement(red, keys_pressed)
@@ -236,6 +270,7 @@ def main():
         handle_bullets(yellow_bullets, red_bullets, yellow, red)
 
         draw_window(yellow, red,
+                    ufo_rect,
                     yellow_bullets, red_bullets,
                     yellow_health, red_health)
 
