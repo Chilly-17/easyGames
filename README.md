@@ -11,5 +11,7 @@
 - I plan to add more features to this game, but now I am just learning the pygame module
 - 14.7.23 Just finished it, I am going to add my own features soon...
 - link: https://www.youtube.com/watch?v=jO6qQDNa2UY
+### My changes
+- The ufo
 ## Snake
 - Unfortunatelly nothing yet
