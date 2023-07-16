@@ -6,6 +6,7 @@
 - Used more of OOP, file management, etc...
 - link: https://www.youtube.com/watch?v=XGf2GcyHPhc
 ## Space invader
+- Currently not working, in process of adding a UFO
 - The tutorial that I am followimg is by Tech With Tim
 - Up to the point where I am now I am following the tutorial.
 - I plan to add more features to this game, but now I am just learning the pygame module
