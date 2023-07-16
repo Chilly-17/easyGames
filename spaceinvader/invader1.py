@@ -1,6 +1,7 @@
 import pygame
 import os
 import time
+import random
 pygame.font.init()
 pygame.mixer.init()
 
@@ -42,6 +43,10 @@ WINNER_FONT = pygame.font.SysFont('comicsans', 100)
 # Events
 YELLOW_HIT = pygame.USEREVENT + 1
 RED_HIT = pygame.USEREVENT + 2
+UFO_TOP = pygame.USEREVENT + 3
+UFO_BOTTOM = pygame.USEREVENT + 4
+YELLOW_HIT_UFO = pygame.USEREVENT + 5
+RED_HIT_UFO = pygame.USEREVENT + 6
 
 # Spaceship images
 SPACESHIP_WIDTH, SPACESHIP_HEIGHT = 55, 40
@@ -64,6 +69,8 @@ UFO = pygame.transform.scale(
     UFO_IMAGE, (UFO_WIDTH, UFO_HEIGHT))
 UFO_VEL = 1
 
+# Timers
+UFO_SPAWN = 30  # time till UFO starts moving
 
 def draw_window(
     yellow: pygame.Rect,
@@ -88,7 +95,7 @@ def draw_window(
     WIN.blit(YELLOW_SPACESHIP, (yellow.x, yellow.y))
     WIN.blit(RED_SPACESHIP, (red.x, red.y))
 
-    #UFO
+    # UFO
     WIN.blit(UFO, (ufo_rect.x, ufo_rect.y))
 
     bullet: pygame.Rect
@@ -144,7 +151,8 @@ def handle_bullets(
     yellow_bullets: list,
     red_bullets: list,
     yellow: pygame.Rect,
-    red: pygame.Rect
+    red: pygame.Rect,
+    ufo_rect: pygame.Rect
 ):
     bullet: pygame.Rect
     for bullet in yellow_bullets:
@@ -153,6 +161,10 @@ def handle_bullets(
         if red.colliderect(bullet):  # yellow hits red
             pygame.event.post(pygame.event.Event(RED_HIT))
             yellow_bullets.remove(bullet)
+
+        elif ufo_rect.colliderect(bullet):
+            yellow_bullets.remove(bullet)
+            pygame.event.post(pygame.event.Event(YELLOW_HIT_UFO))
 
         elif bullet.x > WIDTH:
             yellow_bullets.remove(bullet)
@@ -164,6 +176,10 @@ def handle_bullets(
         if yellow.colliderect(bullet):  # red hits yellow
             pygame.event.post(pygame.event.Event(YELLOW_HIT))
             red_bullets.remove(bullet)
+
+        elif ufo_rect.colliderect(bullet):
+            red_bullets.remove(bullet)
+            pygame.event.post(pygame.event.Event(RED_HIT_UFO))
 
         elif bullet.x < 0:
             red_bullets.remove(bullet)
@@ -180,13 +196,30 @@ def draw_winner(text):
     pygame.time.delay(5000)
 
 
+def ufo_move(ufo_rect: pygame.Rect, ver_direction: int, hor_direction: float, start_time: float):
+    now_time = time.time()
+    if start_time - now_time > UFO_SPAWN:
+        ufo_rect.y += UFO_VEL * ver_direction
+        ufo_rect.x += hor_direction
+        if ufo_rect.y < 0 - 100:
+            ver_direction = 1
+            hor_direction = random.randrange(-2, 2)
+        if ufo_rect.y > HEIGHT + 100:
+            ver_direction = -1
+            hor_direction = random.randrange(-2, 2)
+        if ufo_rect.x > WIDTH + 50:
+            ufo_rect.x = WIDTH // 2 - UFO_WIDTH // 2
+            ufo_rect.y = -100
+
+
 def main():
     start_time = time.time()
 
     yellow = pygame.Rect(100, 300, SPACESHIP_WIDTH, SPACESHIP_HEIGHT)
     red = pygame.Rect(700, 300, SPACESHIP_WIDTH, SPACESHIP_HEIGHT)
 
-    ufo_rect = pygame.Rect(WIDTH // 2 - UFO_WIDTH //2, -100, UFO_WIDTH, UFO_HEIGHT)
+    ufo_rect = pygame.Rect(
+        WIDTH // 2 - UFO_WIDTH // 2, -100, UFO_WIDTH, UFO_HEIGHT)
 
     yellow_bullets, red_bullets = [], []
     yellow_health, red_health = 10, 10
@@ -233,13 +266,23 @@ def main():
                     red_bullets.append(bullet)
                     BULLET_FIRE_SOUND.play()
 
+            # Hits
             if event.type == YELLOW_HIT:
                 BULLET_HIT_SOUND.play()
                 yellow_health -= 1
-
             if event.type == RED_HIT:
                 BULLET_HIT_SOUND.play()
                 red_health -= 1
+            if event.type == YELLOW_HIT_UFO:
+                BULLET_HIT_SOUND.play()
+            if event.type == RED_HIT_UFO:
+                BULLET_HIT_SOUND.play()
+
+            # UFO
+            if event.type == UFO_TOP:
+                ufo_direction = 1
+            if event.type == UFO_BOTTOM:
+                ufo_direction = -1
 
         if red_health <= 0:
             winner_text = "Yellow wins"
@@ -251,23 +294,13 @@ def main():
             draw_winner(winner_text)
             break
 
-        time_now = time.time()
-        passed_time = time_now - start_time
-
-        if passed_time > 10.0 and not ufo_spawned:
-            ufo_spawned = True
-
-        if ufo_spawned:
-            ufo_rect.y += UFO_VEL * ufo_direction
-        
-        if ufo_rect.y > 200:
-            ufo_direction = -1
+        ufo_move(ufo_rect, ufo_direction, start_time)
 
         keys_pressed = pygame.key.get_pressed()
         handle_yellow_movement(yellow, keys_pressed)
         handle_red_movement(red, keys_pressed)
 
-        handle_bullets(yellow_bullets, red_bullets, yellow, red)
+        handle_bullets(yellow_bullets, red_bullets, yellow, red, ufo_rect)
 
         draw_window(yellow, red,
                     ufo_rect,
