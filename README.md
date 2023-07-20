@@ -6,13 +6,16 @@
 - Used more of OOP, file management, etc...
 - link: https://www.youtube.com/watch?v=XGf2GcyHPhc
 ## Space invader
-- Currently not working, in process of adding a UFO
 - The tutorial that I am followimg is by Tech With Tim
 - Up to the point where I am now I am following the tutorial.
 - I plan to add more features to this game, but now I am just learning the pygame module
 - 14.7.23 Just finished it, I am going to add my own features soon...
 - link: https://www.youtube.com/watch?v=jO6qQDNa2UY
 ### My changes
-- The ufo
+- The ufo, and bullet collisions with the ufo
+### Working on
+- Adding geting hit animation:
+- -Spaceship pulses white
+- -Explosion particles
 ## Snake
 - Unfortunatelly nothing yet
