@@ -70,7 +70,8 @@ UFO = pygame.transform.scale(
 UFO_VEL = 1
 
 # Timers
-UFO_SPAWN = 30  # time till UFO starts moving
+UFO_SPAWN = 1  # time till UFO starts moving
+
 
 def draw_window(
     yellow: pygame.Rect,
@@ -196,20 +197,28 @@ def draw_winner(text):
     pygame.time.delay(5000)
 
 
-def ufo_move(ufo_rect: pygame.Rect, ver_direction: int, hor_direction: float, start_time: float):
-    now_time = time.time()
-    if start_time - now_time > UFO_SPAWN:
-        ufo_rect.y += UFO_VEL * ver_direction
-        ufo_rect.x += hor_direction
-        if ufo_rect.y < 0 - 100:
-            ver_direction = 1
-            hor_direction = random.randrange(-2, 2)
-        if ufo_rect.y > HEIGHT + 100:
-            ver_direction = -1
-            hor_direction = random.randrange(-2, 2)
-        if ufo_rect.x > WIDTH + 50:
-            ufo_rect.x = WIDTH // 2 - UFO_WIDTH // 2
-            ufo_rect.y = -100
+class Ufo:
+
+    def __init__(self, ufo_rect: pygame.Rect):
+        self.ver = 1
+        self.hor = random.randrange(-2, 2)
+        self.ufo = ufo_rect
+
+    def move(self, start_time: float):
+        now_time = time.time()
+        if now_time - start_time > UFO_SPAWN:
+            self.ufo.y += UFO_VEL * self.ver
+            self.ufo.x += self.hor
+            if self.ufo.y < 0 - 100:
+                self.ver = 1
+                self.hor = random.randrange(-2, 2)
+            if self.ufo.y > HEIGHT + 100:
+                self.ver = -1
+                self.hor = random.randrange(-2, 2)
+            if self.ufo.x > WIDTH + 100:
+                self.hor = random.randrange(-2, 0)
+            if self.ufo.x < 0 - 100:
+                self.hor = random.randrange(0, 2)
 
 
 def main():
@@ -226,10 +235,9 @@ def main():
 
     winner_text = ""
 
-    ufo_spawned = False
-    ufo_direction = 1  # aka down
-
     clock = pygame.time.Clock()
+
+    ufo = Ufo(ufo_rect)
 
     run = True
     while run:
@@ -276,13 +284,7 @@ def main():
             if event.type == YELLOW_HIT_UFO:
                 BULLET_HIT_SOUND.play()
             if event.type == RED_HIT_UFO:
-                BULLET_HIT_SOUND.play()
-
-            # UFO
-            if event.type == UFO_TOP:
-                ufo_direction = 1
-            if event.type == UFO_BOTTOM:
-                ufo_direction = -1
+                ...
 
         if red_health <= 0:
             winner_text = "Yellow wins"
@@ -294,7 +296,7 @@ def main():
             draw_winner(winner_text)
             break
 
-        ufo_move(ufo_rect, ufo_direction, start_time)
+        ufo.move(start_time)
 
         keys_pressed = pygame.key.get_pressed()
         handle_yellow_movement(yellow, keys_pressed)
