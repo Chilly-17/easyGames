@@ -15,15 +15,20 @@ WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 YELLOW = (255, 255, 0)
 RED = (255, 0, 0)
+GREEN = (0, 255, 0)
+
 SPACE = pygame.transform.scale(
     pygame.image.load(os.path.join("spaceinvader", "assets", "space.png")),
     (WIDTH, HEIGHT))
+SPACE_RECT = pygame.Rect(0, 0, WIDTH, HEIGHT)
 
 # Sounds (.mp3)
 BULLET_HIT_SOUND = pygame.mixer.Sound(
     os.path.join("spaceinvader", "assets", "hitSound.mp3"))
 BULLET_FIRE_SOUND = pygame.mixer.Sound(
     os.path.join("spaceinvader", "assets", "fireSound.mp3"))
+UFO_LASER_SOUND = pygame.mixer.Sound(
+    os.path.join("spaceinvader", "assets", "ufoLaser.mp3"))
 
 # Hard coded fps and player speed
 FPS = 60
@@ -50,7 +55,7 @@ RED_HIT_UFO = pygame.USEREVENT + 6
 
 # Spaceship images
 SPACESHIP_WIDTH, SPACESHIP_HEIGHT = 55, 40
-UFO_WIDTH, UFO_HEIGHT = 100, 90
+UFO_WIDTH, UFO_HEIGHT = 50, 75
 
 YELLOW_SPACESHIP_IMAGE = pygame.image.load(
     os.path.join("spaceinvader", "assets", "spaceship_yellow.png"))
@@ -80,7 +85,9 @@ def draw_window(
     yellow_bullets: list,
     red_bullets: list,
     yellow_heath: int,
-    red_heath: int
+    red_heath: int,
+    yellow_lasers: list,
+    red_lasers: list
 ):
     # Background
     WIN.blit(SPACE, (0, 0))
@@ -107,6 +114,12 @@ def draw_window(
     for bullet in red_bullets:
         pygame.draw.rect(WIN, RED, bullet)
 
+    laser: pygame.Rect
+    for laser in yellow_lasers:
+        pygame.draw.rect(WIN, GREEN, laser)
+
+    for laser in red_lasers:
+        pygame.draw.rect(WIN, GREEN, laser)
     pygame.display.update()
 
 
@@ -153,7 +166,9 @@ def handle_bullets(
     red_bullets: list,
     yellow: pygame.Rect,
     red: pygame.Rect,
-    ufo_rect: pygame.Rect
+    ufo_rect: pygame.Rect,
+    yellow_lasers: list,
+    red_lasers: list
 ):
     bullet: pygame.Rect
     for bullet in yellow_bullets:
@@ -184,6 +199,20 @@ def handle_bullets(
 
         elif bullet.x < 0:
             red_bullets.remove(bullet)
+
+    laser: pygame.Rect
+    for laser in yellow_lasers:
+        laser.x -= BULLET_VEL
+
+        if laser.x < -100:
+            yellow_lasers.remove(laser)
+
+    laser: pygame.Rect
+    for laser in red_lasers:
+        laser.x += BULLET_VEL
+
+        if laser.x > WIDTH + 100:
+            red_lasers.remove(laser)
 
 
 def draw_winner(text):
@@ -220,8 +249,32 @@ class Ufo:
             if self.ufo.x < 0 - 100:
                 self.hor = random.randrange(0, 2)
 
+    def shoot_yellow(self, tick: int):
+        if tick % 100 == 0:  # and self.ufo.colliderect(SPACE_RECT):
+            laser: pygame.Rect = pygame.Rect(
+                self.ufo.x - 50,
+                self.ufo.y + self.ufo.height // 2 + 5,
+                50,
+                5
+            )
+            UFO_LASER_SOUND.play()
+            return laser
+
+    def shoot_red(self, tick: int):
+        if tick % 100 == 50:  # and self.ufo.colliderect(SPACE_RECT):
+            laser: pygame.Rect = pygame.Rect(
+                self.ufo.x + self.ufo.width,
+                self.ufo.y + self.ufo.height // 2 + 5,
+                50,
+                5
+            )
+            UFO_LASER_SOUND.play()
+            return laser
+
 
 def main():
+    tick = 0
+
     start_time = time.time()
 
     yellow = pygame.Rect(100, 300, SPACESHIP_WIDTH, SPACESHIP_HEIGHT)
@@ -239,8 +292,13 @@ def main():
 
     ufo = Ufo(ufo_rect)
 
+    ufo_targets_red, ufo_targets_yellow = False, False
+
+    yellow_lasers, red_lasers = [], []
+
     run = True
     while run:
+        tick += 1
         clock.tick(FPS)
         for event in pygame.event.get():
 
@@ -283,12 +341,22 @@ def main():
                 red_health -= 1
             if event.type == YELLOW_HIT_UFO:
                 BULLET_HIT_SOUND.play()
+                ufo_targets_yellow = True
             if event.type == RED_HIT_UFO:
-                ...
+                BULLET_HIT_SOUND.play()
+                ufo_targets_red = True
+
+        if ufo_targets_yellow:
+            yellow_laser = ufo.shoot_yellow(tick)
+            if yellow_laser is not None:
+                yellow_lasers.append(yellow_laser)
+        if ufo_targets_red:
+            red_laser = ufo.shoot_red(tick)
+            if red_laser is not None:
+                red_lasers.append(red_laser)
 
         if red_health <= 0:
             winner_text = "Yellow wins"
-
         if yellow_health <= 0:
             winner_text = "Red wins"
 
@@ -302,12 +370,21 @@ def main():
         handle_yellow_movement(yellow, keys_pressed)
         handle_red_movement(red, keys_pressed)
 
-        handle_bullets(yellow_bullets, red_bullets, yellow, red, ufo_rect)
+        handle_bullets(
+            yellow_bullets, red_bullets,
+            yellow, red,
+            ufo_rect,
+            yellow_lasers, red_lasers
+        )
 
         draw_window(yellow, red,
                     ufo_rect,
                     yellow_bullets, red_bullets,
-                    yellow_health, red_health)
+                    yellow_health, red_health,
+                    yellow_lasers, red_lasers
+                    )
+        
+        print(red_lasers, yellow_lasers)
 
     main()
 
