@@ -10,6 +10,7 @@ pygame.mixer.init()
 WIDTH, HEIGHT = 900, 500
 SPACESHIP_WIDTH, SPACESHIP_HEIGHT = 55, 40
 UFO_WIDTH, UFO_HEIGHT = 50, 75
+EXPLOSION_WIDTH, EXPLOSION_HEIGHT = 100, 100
 
 # Game window
 WIN = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -39,6 +40,7 @@ FPS = 60
 VEL = 5
 BULLET_VEL = 8
 LASER_VEL = 10
+UFO_VEL = 1
 
 # Maximums
 MAX_BULLETS = 3
@@ -74,10 +76,14 @@ UFO_IMAGE = pygame.image.load(
     os.path.join("spaceinvader", "assets", "UFO.png"))
 UFO = pygame.transform.scale(
     UFO_IMAGE, (UFO_WIDTH, UFO_HEIGHT))
-UFO_VEL = 1
+
+EXPLOSION_IMAGE = pygame.image.load(
+    os.path.join("spaceinvader", "assets", "explosion.png"))
+EXPLOSION = pygame.transform.scale(
+    EXPLOSION_IMAGE, (EXPLOSION_WIDTH, EXPLOSION_HEIGHT))
 
 # Timers
-UFO_SPAWN = 30  # time in seconds
+UFO_SPAWN = 0  # time in seconds
 
 
 def draw_window(
@@ -89,7 +95,8 @@ def draw_window(
     yellow_heath: int,
     red_heath: int,
     yellow_lasers: list,
-    red_lasers: list
+    red_lasers: list,
+    exploded: bool
 ):
     # Background
     WIN.blit(SPACE, (0, 0))
@@ -106,6 +113,13 @@ def draw_window(
     WIN.blit(RED_SPACESHIP, (red.x, red.y))
 
     # UFO
+    if not exploded and exploded is not None:
+        WIN.blit(
+            EXPLOSION, (
+                ufo_rect.x - EXPLOSION_WIDTH // 2 + UFO_WIDTH // 2,
+                ufo_rect.y - EXPLOSION_HEIGHT // 2 + UFO_HEIGHT // 2
+            ))
+
     WIN.blit(UFO, (ufo_rect.x, ufo_rect.y))
 
     bullet: pygame.Rect
@@ -286,6 +300,13 @@ class Ufo:
             UFO_LASER_SOUND.play()
             return laser
 
+    def explode(self, ufo_explode_starting_tick, tick):
+
+        if ufo_explode_starting_tick == 0:  # sets starting tick to current one
+            starting_tick = tick
+
+        return tick - starting_tick >= 30
+
     def remove(self):
         self.ufo.y = -100
 
@@ -295,6 +316,7 @@ def main():
     # time variables
     tick = 0
     start_time = time.time()
+    clock = pygame.time.Clock()
 
     # hit-boxes
     yellow = pygame.Rect(100, 300, SPACESHIP_WIDTH, SPACESHIP_HEIGHT)
@@ -310,13 +332,17 @@ def main():
     yellow_health, red_health = 10, 10
     ufo_health = 25
 
+    # color of the player who won
     winner_text = ""
-
-    clock = pygame.time.Clock()
 
     # ufo related variables
     ufo = Ufo(ufo_rect)
     ufo_targets_red, ufo_targets_yellow = False, False
+
+    # events
+    ufo_dead = False
+    exploded = None
+    is_tick_set = False
 
     run = True
     while run:
@@ -383,8 +409,11 @@ def main():
             winner_text = "Yellow wins"
         if yellow_health <= 0:
             winner_text = "Red wins"
+
         if ufo_health <= 0:
-            ufo.remove()
+            exploded = ufo.explode(is_tick_set, tick)
+            if exploded:
+                ufo_dead
 
         if winner_text != "":
             draw_winner(winner_text)
@@ -411,7 +440,8 @@ def main():
                     ufo_rect,
                     yellow_bullets, red_bullets,
                     yellow_health, red_health,
-                    yellow_lasers, red_lasers
+                    yellow_lasers, red_lasers,
+                    exploded
                     )
 
     # if the while loop is broken by a player winning
