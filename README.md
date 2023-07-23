@@ -12,14 +12,17 @@
 - 14.7.23 Just finished it, I am currently adding new features to it
 - link: https://www.youtube.com/watch?v=jO6qQDNa2UY
 ### My changes
-- The ufo, and bullet collisions with the ufo
+- The ufo
+  * Neautral entity attack back by shooting lasers when angered (getting shot at)
+  * The desing is not final, i will add a more pixaladed look
+- Bullet collisions with the ufo
 - New sound when UFO fires a laser
+- Brand new explosion png, shows up when the ufo is destroyed.
 ### Working on
 - Laser and spaceships collision detection
 - Adding geting hit animation:
-- * Spaceship pulses white
-- * Explosion particles
+  * Spaceship pulses white
+  * Explosion particles (sort of completed)
 ## Snake (future project)
 - link: https://www.youtube.com/watch?v=XGf2GcyHPhc
 - Unfortunatelly nothing yet
-- 
