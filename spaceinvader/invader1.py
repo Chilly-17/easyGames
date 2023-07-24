@@ -257,26 +257,33 @@ def draw_winner(text):
     # "deleting ufo" (just puts it not in the players view)
 class Ufo:
 
-    def __init__(self, ufo_rect: pygame.Rect):
+    def __init__(self, ufo_rect: pygame.Rect, isDead: bool):
         self.ver = 1
         self.hor = random.randrange(-2, 2)
         self.ufo = ufo_rect
+        self.isDead = isDead
 
     def move(self, start_time: float):
-        now_time = time.time()
-        if now_time - start_time > UFO_SPAWN:
-            self.ufo.y += UFO_VEL * self.ver
-            self.ufo.x += self.hor
-            if self.ufo.y < 0 - 100:
-                self.ver = 1
-                self.hor = random.randrange(-2, 2)
-            if self.ufo.y > HEIGHT + 100:
-                self.ver = -1
-                self.hor = random.randrange(-2, 2)
-            if self.ufo.x > WIDTH + 100:
-                self.hor = random.randrange(-2, 0)
-            if self.ufo.x < 0 - 100:
-                self.hor = random.randrange(0, 2)
+        if self.isDead:
+            self.ufo.y = -100
+        else:
+            now_time = time.time()
+            if now_time - start_time > UFO_SPAWN:
+                self.movement()
+
+    def movement(self):
+        self.ufo.y += UFO_VEL * self.ver
+        self.ufo.x += self.hor
+        if self.ufo.y < 0 - 100:
+            self.ver = 1
+            self.hor = random.randrange(-2, 2)
+        if self.ufo.y > HEIGHT + 100:
+            self.ver = -1
+            self.hor = random.randrange(-2, 2)
+        if self.ufo.x > WIDTH + 100:
+            self.hor = random.randrange(-2, 0)
+        if self.ufo.x < 0 - 100:
+            self.hor = random.randrange(0, 2)
 
     def shoot_yellow(self, tick: int):
         if tick % 60 == 0 and self.ufo.colliderect(SPACE_RECT):
@@ -300,15 +307,13 @@ class Ufo:
             UFO_LASER_SOUND.play()
             return laser
 
-    def explode(self, ufo_explode_starting_tick, tick):
+    def explode(self, ufo_explode_starting_tick, tick: int, explode_starting_tick):
 
-        if ufo_explode_starting_tick == 0:  # sets starting tick to current one
-            starting_tick = tick
+        if explode_starting_tick == 0:  # sets starting tick to current one
+            explode_starting_tick = tick
 
-        return tick - starting_tick >= 30
-
-    def remove(self):
-        self.ufo.y = -100
+        print(tick - explode_starting_tick)
+        return tick - explode_starting_tick >= 60
 
 
 def main():
@@ -317,6 +322,7 @@ def main():
     tick = 0
     start_time = time.time()
     clock = pygame.time.Clock()
+    ufo_explode_starting_tick = 0
 
     # hit-boxes
     yellow = pygame.Rect(100, 300, SPACESHIP_WIDTH, SPACESHIP_HEIGHT)
@@ -336,17 +342,17 @@ def main():
     winner_text = ""
 
     # ufo related variables
-    ufo = Ufo(ufo_rect)
+    ufo = Ufo(ufo_rect, isDead=False)
     ufo_targets_red, ufo_targets_yellow = False, False
 
     # events
-    ufo_dead = False
     exploded = None
     is_tick_set = False
 
     run = True
     while run:
         tick += 1
+        print(f"tick: {tick}")
         clock.tick(FPS)
         for event in pygame.event.get():
 
@@ -411,9 +417,11 @@ def main():
             winner_text = "Red wins"
 
         if ufo_health <= 0:
-            exploded = ufo.explode(is_tick_set, tick)
+            exploded = ufo.explode(is_tick_set, tick, ufo_explode_starting_tick)
+            print(exploded)
+            print()
             if exploded:
-                ufo_dead
+                ufo = Ufo(ufo_rect, isDead=True)
 
         if winner_text != "":
             draw_winner(winner_text)
